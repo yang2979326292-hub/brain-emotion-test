@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>左右脑情感测试</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3v26M6 8l10 8-10 8M26 8L16 16l10 8' stroke='%23e8c87a' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+  :root{
+    --gold:#e8c87a; --gold-soft:rgba(232,200,122,.18);
+    --violet:#9b6fd6; --violet-soft:rgba(155,111,214,.20);
+    --ink:#16121f; --text:#f2ecff; --muted:#a99fc2;
+    --line:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--text); background:var(--ink);
+    min-height:100%; display:flex; justify-content:center;
+  }
+  .bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+  .bg::before,.bg::after{content:"";position:absolute;inset:0}
+  .bg::before{background:radial-gradient(60% 50% at 18% 30%,rgba(232,200,122,.22),transparent 60%)}
+  .bg::after{background:radial-gradient(60% 55% at 82% 70%,rgba(155,111,214,.26),transparent 60%)}
+  .seam{position:fixed;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.22),transparent);z-index:-1}
+
+  .wrap{width:100%;max-width:480px;min-height:100%;padding:28px 22px 40px;display:flex;flex-direction:column}
+  .view{display:none;flex-direction:column;flex:1}
+  .view.active{display:flex;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .hero{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;text-align:center}
+  .hero .mark{display:flex;justify-content:center;gap:26px;margin-bottom:6px}
+  .wing{width:46px;height:46px}
+  h1{font-family:"Noto Serif SC",serif;font-weight:900;font-size:30px;letter-spacing:2px;line-height:1.35}
+  .sub{color:var(--muted);font-size:15px;line-height:1.8;font-weight:300}
+  .duo{display:flex;justify-content:center;gap:14px;margin:10px 0;flex-wrap:wrap}
+  .tag{font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--line)}
+  .tag.warm{color:var(--gold);border-color:rgba(232,200,122,.4);background:var(--gold-soft)}
+  .tag.cold{color:var(--violet);border-color:rgba(155,111,214,.45);background:var(--violet-soft)}
+
+  .btn{
+    appearance:none;border:none;cursor:pointer;font-family:inherit;
+    font-size:16px;font-weight:500;letter-spacing:1px;color:#16121f;
+    background:linear-gradient(120deg,var(--gold),#f0d9a0);
+    padding:15px 22px;border-radius:14px;width:100%;
+    transition:transform .15s ease,opacity .15s ease;
+  }
+  .btn:active{transform:scale(.97)}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .progress{font-size:13px;color:var(--muted);white-space:nowrap}
+  .bar{flex:1;height:4px;margin-left:14px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--violet));border-radius:4px;transition:width .3s ease}
+  .question{font-family:"Noto Serif SC",serif;font-size:21px;font-weight:700;line-height:1.6;margin-bottom:24px}
+  .options{display:flex;flex-direction:column;gap:14px}
+  .opt{
+    text-align:left;cursor:pointer;border:1px solid var(--line);border-radius:16px;
+    background:rgba(255,255,255,.05);padding:17px 18px;font-size:15px;line-height:1.6;
+    color:var(--text);font-family:inherit;transition:border-color .15s ease,background .15s ease,transform .15s ease;
+  }
+  .opt:active{transform:scale(.98)}
+  .opt:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
+  .opt .k{display:inline-flex;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);align-items:center;justify-content:center;font-size:12px;color:var(--muted);margin-right:10px}
+
+  .result{flex:1;display:flex;flex-direction:column;gap:18px}
+  .result .rlabel{text-align:center;color:var(--muted);font-size:13px;letter-spacing:2px}
+  .rtitle{font-family:"Noto Serif SC",serif;text-align:center;font-size:26px;font-weight:900;line-height:1.4}
+  .rtitle .warm{color:var(--gold)} .rtitle .cold{color:var(--violet)}
+  .rtitle .mid{color:#cdb8ff}
+  .metrics{display:flex;flex-direction:column;gap:12px}
+  .metric{display:flex;flex-direction:column;gap:6px}
+  .metric .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+  .track{display:flex;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08)}
+  .track i{display:block;height:100%;transition:width .6s ease}
+  .track .angel{background:linear-gradient(90deg,#caa24f,var(--gold))}
+  .track .devil{background:linear-gradient(90deg,var(--violet),#6a479f)}
+  .track .both{background:linear-gradient(90deg,#e8c87a,#9b6fd6)}
+
+  .block{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .block h3{font-size:14px;font-weight:500;color:var(--gold);margin-bottom:10px;letter-spacing:1px}
+  .block.cold h3{color:var(--violet)}
+  .block.mid h3{color:#cdb8ff}
+  .rdesc{font-size:15px;line-height:1.9;color:var(--text)}
+  .rshow{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .rshow li{font-size:14px;line-height:1.7;color:var(--text);padding-left:18px;position:relative}
+  .rshow li::before{content:"";position:absolute;left:0;top:10px;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.6}
+  .rmode{font-size:14px;line-height:1.8;color:var(--text)}
+  .rtip{font-size:14px;line-height:1.8;color:var(--muted)}
+  .actions{display:flex;flex-direction:column;gap:12px;margin-top:auto}
+
+  @media (max-width:380px){
+    h1{font-size:26px} .question{font-size:19px} .rtitle{font-size:23px}
+  }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<div class="seam" aria-hidden="true"></div>
+<div class="wrap">
+
+  <!-- 视图：开始 -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <div class="mark" aria-hidden="true">
+        <svg class="wing" viewBox="0 0 48 48" fill="none">
+          <path d="M24 40C14 34 8 24 8 12c8 2 14 8 16 16 2-8 8-14 16-16 0 12-6 22-16 28Z" fill="rgba(232,200,122,.85)"/>
+        </svg>
+        <svg class="wing" viewBox="0 0 48 48" fill="none">
+          <path d="M24 8c10 6 16 16 16 28-8-2-14-8-16-16-2 8-8 14-16 16 0-12 6-22 16-28Z" fill="rgba(155,111,214,.85)"/>
+        </svg>
+      </div>
+      <h1>左右脑情感测试</h1>
+      <p class="sub">心里住着两个声音，一个想自愈，一个在内耗。<br>24 道情景题，看清此刻是哪一个你占了上风。</p>
+      <div class="duo">
+        <span class="tag warm">天使 · 自愈宽慰</span>
+        <span class="tag cold">恶魔 · 内耗退缩</span>
+      </div>
+      <button class="btn" id="btn-start">开始测试</button>
+    </div>
+  </section>
+
+  <!-- 视图：答题 -->
+  <section class="view" id="view-quiz">
+    <div class="topbar">
+      <span class="progress" id="progress-text">1 / 24</span>
+      <div class="bar"><i id="bar-fill"></i></div>
+    </div>
+    <h2 class="question" id="question-text"></h2>
+    <div class="options" id="options"></div>
+  </section>
+
+  <!-- 视图：结果 -->
+  <section class="view" id="view-result">
+    <div class="result">
+      <div class="rlabel">你的左右脑倾向</div>
+      <div class="rtitle" id="result-title"></div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="row"><span>自愈倾向 · 天使</span><span id="angel-num"></span></div>
+          <div class="track"><i class="angel" id="angel-bar"></i></div>
+        </div>
+        <div class="metric">
+          <div class="row"><span>内耗倾向 · 恶魔</span><span id="devil-num"></span></div>
+          <div class="track"><i class="devil" id="devil-bar"></i></div>
+        </div>
+        <div class="metric">
+          <div class="row"><span>反复纠结 · 拉锯</span><span id="both-num"></span></div>
+          <div class="track"><i class="both" id="both-bar"></i></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>你的画像</h3>
+        <p class="rdesc" id="result-desc"></p>
+      </div>
+
+      <div class="block cold" id="show-block">
+        <h3>你常有的表现</h3>
+        <ul class="rshow" id="result-shows"></ul>
+      </div>
+
+      <div class="block mid">
+        <h3>这段关系里的你</h3>
+        <p class="rmode" id="result-mode"></p>
+      </div>
+
+      <p class="rtip" id="result-tip"></p>
+
+      <div class="actions">
+        <button class="btn" id="btn-retry">重新测一次</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const QUESTIONS = [
+  { q: "她很久没回你消息，你通常会？", options: [
+    { text: "告诉自己她在忙，别去打扰", type: "angel" },
+    { text: "反复看手机，越想越不安", type: "devil" },
+    { text: "一边等，一边在心里骂自己没用", type: "both" } ] },
+  { q: "睡前想起她，脑子里冒出来的第一个念头是？", options: [
+    { text: "她不是那样的人，别自己吓自己", type: "angel" },
+    { text: "她大概已经没那么在意了", type: "devil" },
+    { text: "一会儿想通了，一会儿又卡住", type: "both" } ] },
+  { q: "对话框里打好了一句话，你会？", options: [
+    { text: "直接发出去，想说就说", type: "angel" },
+    { text: "删掉，怕主动过去会打扰到对方", type: "devil" },
+    { text: "删了又打，打了又删，最后还是没发", type: "both" } ] },
+  { q: "朋友劝你别再主动，你？", options: [
+    { text: "替她辩解，觉得只是自己想多了", type: "angel" },
+    { text: "听进去，让自己慢慢放下", type: "devil" },
+    { text: "嘴上答应，心里其实还是放不下", type: "both" } ] },
+  { q: "刷到她的社交动态时，你？", options: [
+    { text: "看完就过，不往上面对号入座", type: "angel" },
+    { text: "逐条分析语气和点赞，猜她心思", type: "devil" },
+    { text: "想看又不敢多看，看完又乱想", type: "both" } ] },
+  { q: "她说过一句含糊的话，你？", options: [
+    { text: "按字面理解，不往坏处猜", type: "angel" },
+    { text: "反复琢磨她是不是在疏远自己", type: "devil" },
+    { text: "一会儿觉得没事，一会儿觉得有事", type: "both" } ] },
+  { q: "见面时她有一个冷淡的瞬间，你？", options: [
+    { text: "归因为她当天状态不好", type: "angel" },
+    { text: "认定是自己哪里惹她不快了", type: "devil" },
+    { text: "反复回放那个瞬间，拿不准", type: "both" } ] },
+  { q: "要不要主动联系她，你？", options: [
+    { text: "想联系就联系，顺其自然", type: "angel" },
+    { text: "忍住不找，怕显得自己卑微", type: "devil" },
+    { text: "手放在输入框，迟迟发不出去", type: "both" } ] },
+  { q: "她回消息比平时慢，你？", options: [
+    { text: "各自都有正事，不急", type: "angel" },
+    { text: "立刻怀疑自己是不是说错话", type: "devil" },
+    { text: "等一会儿安慰自己，再等又慌", type: "both" } ] },
+  { q: "看到好玩的事想分享给她，你？", options: [
+    { text: "顺手发过去，分享而已", type: "angel" },
+    { text: "算了，怕对方觉得我太主动", type: "devil" },
+    { text: "编辑好又撤回，纠结要不要发", type: "both" } ] },
+  { q: "她态度突然变淡，你？", options: [
+    { text: "给彼此一点空间，慢慢看", type: "angel" },
+    { text: "觉得这段关系快要结束了", type: "devil" },
+    { text: "一会儿想挽回，一会儿想算了", type: "both" } ] },
+  { q: "翻到过去的聊天记录，你？", options: [
+    { text: "记得的是开心的部分，慢慢放下", type: "angel" },
+    { text: "只盯着当时冷淡的细节反复难过", type: "devil" },
+    { text: "看着看着笑一下，又忽然难受", type: "both" } ] },
+  { q: "关于自尊和面子，你？", options: [
+    { text: "在意不等于输，真诚不丢人", type: "angel" },
+    { text: "先退一步，不能让自己太掉价", type: "devil" },
+    { text: "想低头，又怕被看不起", type: "both" } ] },
+  { q: "你们之间出现一个误会，你？", options: [
+    { text: "能说清楚就沟通，不憋着", type: "angel" },
+    { text: "怕越解释越糟，先退缩", type: "devil" },
+    { text: "想问清楚，又怕问了更难堪", type: "both" } ] },
+  { q: "情绪很低落的时候想到她，你？", options: [
+    { text: "先照顾好自己，再想关系", type: "angel" },
+    { text: "反复想是不是自己不够好", type: "devil" },
+    { text: "一边鼓励自己，一边还是难过", type: "both" } ] },
+  { q: "听到一首熟悉的歌、走到相似的场景，你？", options: [
+    { text: "笑一下就继续往前走", type: "angel" },
+    { text: "瞬间被拉回回忆，走不出来", type: "devil" },
+    { text: "心里一动，强迫自己移开", type: "both" } ] },
+  { q: "关系一直模糊说不清楚，你？", options: [
+    { text: "顺其自然，不急着要答案", type: "angel" },
+    { text: "觉得自己只是一厢情愿", type: "devil" },
+    { text: "想确认，又怕答案让人失望", type: "both" } ] },
+  { q: "她提到别的异性，你？", options: [
+    { text: "正常社交，不多想", type: "angel" },
+    { text: "悄悄对比自己，心里发慌", type: "devil" },
+    { text: "表面不动声色，心里翻江倒海", type: "both" } ] },
+  { q: "在意自己在她面前的表现，你？", options: [
+    { text: "做自己就好，不用刻意讨好", type: "angel" },
+    { text: "反复回想哪句话说得不妥", type: "devil" },
+    { text: "想表现好，又怕用力过猛", type: "both" } ] },
+  { q: "要不要继续等她，你？", options: [
+    { text: "该做什么做什么，不等谁施舍", type: "angel" },
+    { text: "不敢再投入，怕最后落空", type: "devil" },
+    { text: "说不等了，却还是一直在等", type: "both" } ] },
+  { q: "被她忽略的某个瞬间，你？", options: [
+    { text: "她可能没留意，不是故意的", type: "angel" },
+    { text: "反复确认自己是不是被讨厌", type: "devil" },
+    { text: "当时没在意，事后越想越委屈", type: "both" } ] },
+  { q: "好不容易想通一次，你？", options: [
+    { text: "想通就翻篇，不再回头", type: "angel" },
+    { text: "没过多久又被新念头拉回去", type: "devil" },
+    { text: "刚平静一点，又开始重新纠结", type: "both" } ] },
+  { q: "心里觉得委屈的时候，你？", options: [
+    { text: "承认委屈，也允许自己难过", type: "angel" },
+    { text: "把委屈咽下去，怪自己想太多", type: "devil" },
+    { text: "想说出来，又怕显得矫情", type: "both" } ] },
+  { q: "深夜一个人时，这段关系给你的感受是？", options: [
+    { text: "平静，知道自己值得被好好对待", type: "angel" },
+    { text: "沉重，患得患失又不断自我怀疑", type: "devil" },
+    { text: "一会儿暖一会儿冷，睡不踏实", type: "both" } ] }
+];
+
+const RESULTS = {
+  angel: {
+    title: ["天使主导", " · 自愈型"],
+    tone: "warm",
+    desc: "你心里的安抚者更强势，习惯先替对方找理由，也总能在情绪下坠时一点点把自己捞回来。你不是没有难过，而是更愿意往善意和善意的方向理解；哪怕受了委屈，也会先稳住自己，再慢慢消化。",
+    shows: [
+      "容易先替她解释，觉得冷淡可能只是状态不好，而不是针对你",
+      "情绪上来时能自我平复，不会一直困在同一个念头里",
+      "愿意真诚付出，也不太把主动联系看成掉价的事",
+      "难过归难过，通常还能把生活和手头的事继续过下去"
+    ],
+    mode: "在这段关系里，你更像那个不断兜底的人：包容对方的忽冷忽热，也反复说服自己别多想。你的善意是真的，但也要留意——如果总是只有你在替对方找理由，委屈最后只会积在自己心里。",
+    tip: "建议：自愈不等于忽略委屈。可以继续温和，但别把所有不安都一个人消化；分清楚哪些是自己想通了，哪些只是在替对方承担本不属于你的情绪。"
+  },
+  devil: {
+    title: ["恶魔主导", " · 内耗型"],
+    tone: "cold",
+    desc: "你更容易被怀疑和退缩拉住，事情还没发生，已经在脑子里演了一遍又一遍。你在意得越深，越容易先往最坏的方向想；一句冷淡、一次慢回，都能被你放大成关系出了问题，然后反复自我盘问。",
+    shows: [
+      "对方反应稍慢，就先怀疑是不是自己说错了话",
+      "反复回看聊天记录和社交动态，寻找被冷落的证据",
+      "想主动又忍住，怕显得卑微、怕被嫌烦、怕最后落空",
+      "情绪低落时习惯把原因归到自己不够好身上"
+    ],
+    mode: "在这段关系里，你常常还没等到对方的答案，就先在心里把自己否定了一遍。你以为退一步是保护自己，实际上是把主动权和好心情都交了出去；内耗最重的时候，不是对方做了什么，而是你脑子里那个不停挑刺的声音。",
+    tip: "建议：多想一步可以，别把自己困在最坏的假设里。练习把“事实”和“猜测”分开写下来：哪些是她明确做过的，哪些只是你的担心。很多不安，其实只是脑子里的声音，并不是结论。"
+  },
+  split: {
+    title: ["左右拉锯", " · 分裂型"],
+    tone: "mid",
+    desc: "你心里两个声音势均力敌：一会儿替她说话，一会儿又想退开；一会儿想通了，一会儿又卡住。你的情绪在暖与冷之间来回弹，刚平静一点就被新的念头拽回去，最累的往往不是关系本身，而是这种反复拉扯。",
+    shows: [
+      "手放在输入框，删了又打，打了又删",
+      "一边替她辩解“她不是这样的人”，一边又忍不住怀疑",
+      "说好了放下，情绪上来又忍不住回头看",
+      "一会儿想靠近，一会儿让自己退后，始终拿不定主意"
+    ],
+    mode: "在这段关系里，你像站在一道裂缝中间：左边想相信、想靠近，右边想防备、想退出。两种情绪轮流赢，结果就是你一直在原地消耗。真正拖住你的，往往不是某一个决定，而是迟迟不肯给自己一个明确答案。",
+    tip: "建议：先停下反复试探，列清楚你到底在意什么、不能接受什么。把“一会儿想、一会儿不想”换成具体的判断依据；当拉扯太久，停下来照顾自己，比再猜一次更重要。"
+  }
+};
+
+const state = { idx: 0, angel: 0, devil: 0, both: 0 };
+
+const $ = (id) => document.getElementById(id);
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $(name).classList.add("active");
+}
+
+function renderQuestion(){
+  const item = QUESTIONS[state.idx];
+  $("progress-text").textContent = (state.idx + 1) + " / " + QUESTIONS.length;
+  $("bar-fill").style.width = (state.idx / QUESTIONS.length * 100) + "%";
+  $("question-text").textContent = item.q;
+  const box = $("options");
+  box.innerHTML = "";
+  item.options.forEach((opt, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = '<span class="k">' + (i + 1) + "</span>" + opt.text;
+    b.addEventListener("click", () => choose(opt.type));
+    box.appendChild(b);
+  });
+}
+
+function choose(type){
+  if (type === "angel") state.angel += 1;
+  else if (type === "devil") state.devil += 1;
+  else { state.angel += 1; state.devil += 1; state.both += 1; }
+  state.idx += 1;
+  if (state.idx < QUESTIONS.length) renderQuestion();
+  else renderResult();
+}
+
+function renderResult(){
+  const total = state.angel + state.devil || 1;
+  const ratioA = state.angel / total;
+  let type;
+  if (ratioA >= 0.6) type = "angel";
+  else if (ratioA <= 0.4) type = "devil";
+  else type = "split";
+
+  const r = RESULTS[type];
+  const toneClass = r.tone === "warm" ? "warm" : r.tone === "cold" ? "cold" : "mid";
+  $("result-title").innerHTML = '<span class="' + toneClass + '">' + r.title[0] + "</span>" + r.title[1];
+  $("result-desc").textContent = r.desc;
+  $("result-mode").textContent = r.mode;
+  $("result-tip").textContent = r.tip;
+
+  const shows = $("result-shows");
+  shows.innerHTML = "";
+  r.shows.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s;
+    shows.appendChild(li);
+  });
+
+  const angelPct = Math.round(state.angel / total * 100);
+  const devilPct = 100 - angelPct;
+  const bothPct = Math.round(state.both / QUESTIONS.length * 100);
+  $("angel-bar").style.width = angelPct + "%";
+  $("devil-bar").style.width = devilPct + "%";
+  $("both-bar").style.width = bothPct + "%";
+  $("angel-num").textContent = angelPct + "%";
+  $("devil-num").textContent = devilPct + "%";
+  $("both-num").textContent = bothPct + "%";
+  showView("view-result");
+}
+
+function reset(){
+  state.idx = 0; state.angel = 0; state.devil = 0; state.both = 0;
+  renderQuestion();
+  showView("view-quiz");
+}
+
+$("btn-start").addEventListener("click", () => { renderQuestion(); showView("view-quiz"); });
+$("btn-retry").addEventListener("click", reset);
+</script>
+</body>
+</html>
